@@ -1,0 +1,12 @@
+pyproject.toml
+src/book_system/__init__.py
+src/book_system/config.py
+src/book_system/exporters.py
+src/book_system/models.py
+src/book_system/repositories.py
+src/book_system/services.py
+src/book_system.egg-info/PKG-INFO
+src/book_system.egg-info/SOURCES.txt
+src/book_system.egg-info/dependency_links.txt
+src/book_system.egg-info/requires.txt
+src/book_system.egg-info/top_level.txt
