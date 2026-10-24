@@ -15,12 +15,9 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "-ra --strict-markers --cov=book_system --cov-branch --cov-report=term-missing"
-markers = [
-    "integration: integration tests",
-]
+testpaths = ["tests"]
+addopts = "-v --cov=book_system --cov-branch"
 
 [tool.coverage.run]
 branch = true
