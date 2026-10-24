@@ -1,46 +1,84 @@
-from typing import Optional
+import asyncio
+from typing import List, Optional
 from book_system.models import Book
-from book_system.repositories import BookRepository, AsyncExternalCatalog
+from book_system.repositories import BookRepository
+
 
 class CatalogService:
-    def __init__(self, repository: BookRepository, external_catalog: Optional[AsyncExternalCatalog] = None) -> None:
-        self.repo = repository
-        self.external_catalog = external_catalog
 
-    def add_book(self, book: Book) -> None:
-        self.repo.add(book)
+  def __init__(
+      self,
+      repository: BookRepository,
+      external_catalog: Optional[object] = None,
+  ):
+    self.repository = repository
+    self.external_catalog = external_catalog
 
-    def search_by_title(self, query: str) -> list[Book]:
-        return [b for b in self.repo.get_all() if query.lower() in b.title.lower()]
+  def add_book(self, book: Book) -> None:
+    if hasattr(self.repository, "add"):
+      self.repository.add(book)
 
-    def search_by_author(self, author: str) -> list[Book]:
-        return self.repo.find_by_author(author)
+  def search_by_title(self, title: str) -> List[Book]:
+    if not title:
+      return []
+    books = self.repository.get_all()
+    return [b for b in books if title.lower() in b.title.lower()]
 
-    def filter_by_year(self, year: int) -> list[Book]:
-        return [b for b in self.repo.get_all() if b.year == year]
+  def search_by_author(self, author: str) -> List[Book]:
+    if not author:
+      return []
+    if hasattr(self.repository, "find_by_author"):
+      res = self.repository.find_by_author(author)
+      if isinstance(res, list):
+        return res
+    books = self.repository.get_all()
+    return [b for b in books if author.lower() in b.author.lower()]
 
-    def get_largest_book(self) -> Optional[Book]:
-        books = self.repo.get_all()
-        if not books:
-            return None
-        return max(books, key=lambda b: b.pages)
+  def filter_by_year(self, year: int) -> List[Book]:
+    books = self.repository.get_all()
+    return [b for b in books if b.year == year]
 
-    def get_average_pages(self) -> float:
-        books = self.repo.get_all()
-        if not books:
-            return 0.0
-        return sum(b.pages for b in books) / len(books)
+  def get_largest_book(self) -> Optional[Book]:
+    books = self.repository.get_all()
+    if not books:
+      return None
+    return max(books, key=lambda b: b.pages)
 
-    async def sync_remote_book(self, isbn: str) -> Book:
-        if not self.external_catalog:
-            raise RuntimeError("External catalog service not configured")
-        data = await self.external_catalog.fetch_remote_book(isbn)
-        book = Book(
-            book_id=data["id"],
-            title=data["title"],
-            author=data["author"],
-            year=data["year"],
-            pages=data["pages"]
-        )
-        self.repo.add(book)
-        return book
+  def get_average_pages(self) -> float:
+    books = self.repository.get_all()
+    if not books:
+      return 0.0
+    return sum(b.pages for b in books) / len(books)
+
+  async def sync_remote_book(self, book_id: int) -> Optional[Book]:
+    if self.external_catalog is None:
+      raise RuntimeError("External catalog service not configured")
+
+    fetch_fn = getattr(
+        self.external_catalog,
+        "fetch_remote_book",
+        getattr(self.external_catalog, "fetch_book", None),
+    )
+
+    if asyncio.iscoroutinefunction(fetch_fn):
+      result = await fetch_fn(book_id)
+    else:
+      result = fetch_fn(book_id)
+
+    if not result:
+      return None
+
+    if isinstance(result, dict):
+      b_id = result.get("id", result.get("book_id", book_id))
+      book = Book(
+          b_id,
+          result.get("title", ""),
+          result.get("author", ""),
+          result.get("year", 2000),
+          result.get("pages", 100),
+      )
+    else:
+      book = result
+
+    self.add_book(book)
+    return book
