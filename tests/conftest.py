@@ -1,4 +1,4 @@
-from unittest.mock import create_autospec
+from unittest.mock import Mock, create_autospec
 import pytest
 from book_system.models import Book
 from book_system.repositories import BookRepository
@@ -42,3 +42,8 @@ def book_factory():
 @pytest.fixture
 def mock_repo():
   return create_autospec(BookRepository, instance=True)
+
+
+@pytest.fixture
+def mock_book_repository():
+  return Mock(spec=BookRepository)
