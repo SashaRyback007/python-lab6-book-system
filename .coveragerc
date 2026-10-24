@@ -1,5 +1,5 @@
 [run]
-source = book_system
+source = src/book_system
 branch = True
 
 [report]
