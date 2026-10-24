@@ -15,15 +15,15 @@ class CatalogService:
     self.external_catalog = external_catalog
 
   def add_book(self, book: Book) -> None:
-    self.repository.add(book)
+    if hasattr(self.repository, "add"):
+      self.repository.add(book)
 
   def search_by_title(self, title: str) -> List[Book]:
     if not title or not title.strip():
       return []
     t = title.strip().lower()
-    return [
-        b for b in self.repository.get_all() if t in b.title.lower()
-    ]
+    books = self.repository.get_all()
+    return [b for b in books if t in b.title.lower()]
 
   def search_by_author(self, author: str) -> List[Book]:
     if not author or not author.strip():
@@ -31,12 +31,12 @@ class CatalogService:
     if hasattr(self.repository, "find_by_author"):
       return self.repository.find_by_author(author)
     a = author.strip().lower()
-    return [
-        b for b in self.repository.get_all() if a in b.author.lower()
-    ]
+    books = self.repository.get_all()
+    return [b for b in books if a in b.author.lower()]
 
   def filter_by_year(self, year: int) -> List[Book]:
-    return [b for b in self.repository.get_all() if b.year == int(year)]
+    books = self.repository.get_all()
+    return [b for b in books if b.year == int(year)]
 
   def get_largest_book(self) -> Optional[Book]:
     books = self.repository.get_all()
@@ -59,6 +59,9 @@ class CatalogService:
         "fetch_remote_book",
         getattr(self.external_catalog, "fetch_book", None),
     )
+
+    if fetch_fn is None:
+      raise RuntimeError("External catalog service not configured")
 
     if asyncio.iscoroutinefunction(fetch_fn):
       result = await fetch_fn(book_id)
