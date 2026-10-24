@@ -111,3 +111,30 @@ async def test_async_sync_remote_book_missing_catalog_raises_error():
 
     with pytest.raises(RuntimeError, match="External catalog service not configured"):
         await service.sync_remote_book("123456789")
+
+def test_search_empty_queries(sample_book):
+  repo = Mock(spec=BookRepository)
+  repo.get_all.return_value = [sample_book]
+  service = CatalogService(repo)
+
+  assert service.search_by_title("") == []
+  assert service.search_by_author("") == []
+
+
+def test_empty_repository_stats():
+  repo = Mock(spec=BookRepository)
+  repo.get_all.return_value = []
+  service = CatalogService(repo)
+
+  assert service.get_largest_book() is None
+  assert service.get_average_pages() == 0.0
+
+
+@pytest.mark.asyncio
+async def test_sync_remote_book_returns_none(sample_book):
+  catalog = Mock()
+  catalog.fetch_remote_book.return_value = None
+  service = CatalogService(Mock(), external_catalog=catalog)
+
+  res = await service.sync_remote_book(1)
+  assert res is None
