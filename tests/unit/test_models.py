@@ -14,6 +14,14 @@ def test_empty_author_raises_exception():
     with pytest.raises(InvalidBookDataError, match="Author cannot be empty"):
         Book(1, "Title", "", 2020, 100)
 
+def test_custom_exception_inheritance():
+    """Явна перевірка custom exception."""
+    with pytest.raises(InvalidBookDataError) as exc_info:
+        Book(1, "", "Author", 2020, 100)
+    
+    assert isinstance(exc_info.value, Exception)
+    assert "Title cannot be empty" in str(exc_info.value)
+    
 @pytest.mark.parametrize("invalid_year", [999, 2027, -1], ids=["too_old", "future", "negative"])
 def test_invalid_year_boundary(invalid_year):
     with pytest.raises(InvalidBookDataError, match="Year must be between"):
