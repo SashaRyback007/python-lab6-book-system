@@ -1,0 +1,7 @@
+[run]
+source = book_system
+branch = True
+
+[report]
+show_missing = True
+fail_under = 100
