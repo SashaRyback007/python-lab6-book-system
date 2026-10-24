@@ -15,28 +15,28 @@ class CatalogService:
     self.external_catalog = external_catalog
 
   def add_book(self, book: Book) -> None:
-    if hasattr(self.repository, "add"):
-      self.repository.add(book)
+    self.repository.add(book)
 
   def search_by_title(self, title: str) -> List[Book]:
     if not title:
       return []
-    books = self.repository.get_all()
-    return [b for b in books if title.lower() in b.title.lower()]
+    return [
+        b for b in self.repository.get_all() if title.lower() in b.title.lower()
+    ]
 
   def search_by_author(self, author: str) -> List[Book]:
     if not author:
       return []
     if hasattr(self.repository, "find_by_author"):
-      res = self.repository.find_by_author(author)
-      if isinstance(res, list):
-        return res
-    books = self.repository.get_all()
-    return [b for b in books if author.lower() in b.author.lower()]
+      return self.repository.find_by_author(author)
+    return [
+        b
+        for b in self.repository.get_all()
+        if author.lower() in b.author.lower()
+    ]
 
   def filter_by_year(self, year: int) -> List[Book]:
-    books = self.repository.get_all()
-    return [b for b in books if b.year == year]
+    return [b for b in self.repository.get_all() if b.year == year]
 
   def get_largest_book(self) -> Optional[Book]:
     books = self.repository.get_all()
@@ -69,9 +69,8 @@ class CatalogService:
       return None
 
     if isinstance(result, dict):
-      b_id = result.get("id", result.get("book_id", book_id))
       book = Book(
-          b_id,
+          result.get("id", book_id),
           result.get("title", ""),
           result.get("author", ""),
           result.get("year", 2000),

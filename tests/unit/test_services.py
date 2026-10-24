@@ -138,3 +138,24 @@ async def test_sync_remote_book_returns_none(sample_book):
 
   res = await service.sync_remote_book(1)
   assert res is None
+
+def test_search_by_author_fallback_when_no_find_by_author(sample_book):
+  class RepoWithoutFindByAuthor:
+
+    def get_all(self):
+      return [sample_book]
+
+  service = CatalogService(RepoWithoutFindByAuthor())
+  assert service.search_by_author("Taras Shevchenko") == [sample_book]
+
+
+@pytest.mark.asyncio
+async def test_sync_remote_book_object_return_branch(sample_book):
+  catalog = Mock()
+  catalog.fetch_remote_book.return_value = sample_book
+  repo = Mock()
+  service = CatalogService(repo, external_catalog=catalog)
+
+  res = await service.sync_remote_book(1)
+  assert res == sample_book
+  repo.add.assert_called_once_with(sample_book)
