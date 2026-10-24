@@ -69,7 +69,7 @@ def test_mock_side_effect_explicit():
     service = CatalogService(repo)
     with pytest.raises(RuntimeError, match="DB connection error"):
         service.search_by_author("Taras Shevchenko")
-        
+
 @pytest.mark.asyncio
 async def test_async_sync_remote_book_success():
     repo = Mock(spec=BookRepository)
@@ -101,3 +101,13 @@ async def test_async_sync_remote_book_failure_side_effect():
         await service.sync_remote_book("123456789")
     
     repo.add.assert_not_called()
+    
+@pytest.mark.asyncio
+async def test_async_sync_remote_book_missing_catalog_raises_error():
+    """Тест для закриття рядка 36 та досягнення 100% Coverage."""
+    repo = Mock(spec=BookRepository)
+    # Передаємо external_catalog=None
+    service = CatalogService(repo, external_catalog=None)
+
+    with pytest.raises(RuntimeError, match="External catalog service not configured"):
+        await service.sync_remote_book("123456789")

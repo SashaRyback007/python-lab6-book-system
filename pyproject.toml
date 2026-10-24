@@ -24,7 +24,7 @@ markers = [
 
 [tool.coverage.run]
 branch = true
-source = ["book_system"]
+source = ["src/book_system"]
 
 [tool.coverage.report]
 show_missing = true
