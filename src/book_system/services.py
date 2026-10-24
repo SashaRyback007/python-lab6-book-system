@@ -15,7 +15,8 @@ class CatalogService:
     self.external_catalog = external_catalog
 
   def add_book(self, book: Book) -> None:
-    self.repository.add(book)
+    if hasattr(self.repository, "add"):
+      self.repository.add(book)
 
   def search_by_title(self, title: str) -> List[Book]:
     if not title:
@@ -28,7 +29,9 @@ class CatalogService:
     if not author:
       return []
     if hasattr(self.repository, "find_by_author"):
-      return self.repository.find_by_author(author)
+      res = self.repository.find_by_author(author)
+      if res is not None:
+        return res
     return [
         b
         for b in self.repository.get_all()
@@ -59,6 +62,9 @@ class CatalogService:
         "fetch_remote_book",
         getattr(self.external_catalog, "fetch_book", None),
     )
+
+    if fetch_fn is None:
+      raise RuntimeError("External catalog service not configured")
 
     if asyncio.iscoroutinefunction(fetch_fn):
       result = await fetch_fn(book_id)
