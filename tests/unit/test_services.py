@@ -57,7 +57,19 @@ def test_get_average_pages(book_list):
     # (228 + 350 + 180) / 3 = 252.6666...
     avg = service.get_average_pages()
     assert avg == pytest.approx(252.6666, rel=1e-3)
+def test_mock_return_value_explicit():
+    repo = Mock(spec=BookRepository)
+    repo.get_all.return_value = []
+    service = CatalogService(repo)
+    assert service.get_largest_book() is None
 
+def test_mock_side_effect_explicit():
+    repo = Mock(spec=BookRepository)
+    repo.find_by_author.side_effect = RuntimeError("DB connection error")
+    service = CatalogService(repo)
+    with pytest.raises(RuntimeError, match="DB connection error"):
+        service.search_by_author("Taras Shevchenko")
+        
 @pytest.mark.asyncio
 async def test_async_sync_remote_book_success():
     repo = Mock(spec=BookRepository)
