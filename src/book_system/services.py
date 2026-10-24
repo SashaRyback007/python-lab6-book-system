@@ -19,27 +19,26 @@ class CatalogService:
       self.repository.add(book)
 
   def search_by_title(self, title: str) -> List[Book]:
-    if not title:
+    if not title or not title.strip():
       return []
-    return [
-        b for b in self.repository.get_all() if title.lower() in b.title.lower()
-    ]
+    t = title.strip().lower()
+    books = self.repository.get_all()
+    return [b for b in books if t in b.title.lower()]
 
   def search_by_author(self, author: str) -> List[Book]:
-    if not author:
+    if not author or not author.strip():
       return []
     if hasattr(self.repository, "find_by_author"):
       res = self.repository.find_by_author(author)
       if res is not None:
         return res
-    return [
-        b
-        for b in self.repository.get_all()
-        if author.lower() in b.author.lower()
-    ]
+    a = author.strip().lower()
+    books = self.repository.get_all()
+    return [b for b in books if a in b.author.lower()]
 
   def filter_by_year(self, year: int) -> List[Book]:
-    return [b for b in self.repository.get_all() if b.year == year]
+    books = self.repository.get_all()
+    return [b for b in books if b.year == int(year)]
 
   def get_largest_book(self) -> Optional[Book]:
     books = self.repository.get_all()
@@ -76,11 +75,11 @@ class CatalogService:
 
     if isinstance(result, dict):
       book = Book(
-          result.get("id", book_id),
-          result.get("title", ""),
-          result.get("author", ""),
-          result.get("year", 2000),
-          result.get("pages", 100),
+          int(result.get("id", book_id)),
+          str(result.get("title", "")),
+          str(result.get("author", "")),
+          int(result.get("year", 2000)),
+          int(result.get("pages", 100)),
       )
     else:
       book = result
